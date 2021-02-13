@@ -30,10 +30,6 @@ Let's start with an umbrella customization group:
   :header-args: :noweb-ref espotify-body
   :END:
 
-  I am stealing most of the ideas on how to establish authenticated
-  connections to the Spotify API and performing queries from
-  [[https://github.com/Lautaro-Garcia/counsel-spotify][counsel-spotify]], with many simplifications.
-
   We start defining a couple of end-points:
 
   #+begin_src emacs-lisp
@@ -500,7 +496,7 @@ Let's start with an umbrella customization group:
 
    And likewise for playlists, artists and combinations thereof:
 
-  #+begin_src emacs-lisp
+   #+begin_src emacs-lisp
 
      ;;;###autoload
      (defun espotify-consult-artist (&optional filter)
@@ -517,7 +513,9 @@ Let's start with an umbrella customization group:
        (interactive)
        (espotify--maybe-play (espotify-consult-by 'playlist filter)))
 
-  #+end_src
+   #+end_src
+
+   Our package is ready!
 
 * Adding metadata to candidates using Marginalia
   :PROPERTIES:
@@ -799,3 +797,13 @@ Let's start with an umbrella customization group:
       ;; You should have received a copy of the GNU General Public License
       ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
     #+end_src
+
+* Acknowledgements
+
+  The code above benefited quite a bit from Daniel Mendler's and Antolin
+  Omar Camarena's comments, and i discussed a bit its evolution and
+  other possibilities offered by the consult API [[https://jao.io/blog/2021-01-21-consulting-spotify-in-a-better-way.html][in this blog post]].
+
+  I am stealing most of the ideas on how to establish authenticated
+  connections to the Spotify API and performing queries from
+  [[https://github.com/Lautaro-Garcia/counsel-spotify][counsel-spotify]], with many simplifications.
