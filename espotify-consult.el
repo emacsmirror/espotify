@@ -25,8 +25,13 @@
 
 ;;; Comentary:
 
-;; This package provides functions to interactively query Spotify
-;; using consult.
+;; This package provides functions to interactively query
+;; Spotify using consult.  Its main entry points are the
+;; commands `espotify-consult-album', `espotify-consult-artist',
+;; `espotify-consult-playlist' and `espotify-consult-track'
+
+;; This file has been automatically generated from the literate program
+;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
 
 ;;; Code:
 

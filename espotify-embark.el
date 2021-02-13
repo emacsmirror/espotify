@@ -26,7 +26,10 @@
 ;;; Comentary:
 
 ;; This package provides embark actions to invoke when using
-;; espotify-consult.
+;; the commands in espotify-consult.
+
+;; This file has been automatically generated from the literate program
+;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
 
 ;;; Code:
 
