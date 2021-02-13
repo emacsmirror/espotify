@@ -1,12 +1,12 @@
-#+title: consulting spotify
+#+title: emacs spotify packages
 #+date: <2021-01-08 04:02>
 #+auto_tangle: t
 #+filetags: emacs norss
-#+PROPERTY: header-args :tangle yes :comments no :results silent
+#+PROPERTY: header-args :tangle no :noweb tangle
 
 (/Note/: you can tangle this file (e.g., with =C-c C-v t= inside Emacs)
-into four elisp libraries: =espotify.el=, =espotify-consult.el=,
-=espotify-embark=. and =espotify-counsel=)
+into three elisp libraries: [[./espotify.el][espotify.el]], [[./espotify-consult.el][espotify-consult.el]], and
+[[./espotify-embark.el][espotify-embark.el]])
 
 We have two kinds of interaction with Spotify: via its HTTP API to
 perform operations such as search, and via our local DBUS to talk to
@@ -17,15 +17,18 @@ with emacs completion mechanisms (consult and friends in this case)
 providing the glue between both worlds.
 
 Let's start with an umbrella customization group:
-#+begin_src emacs-lisp
-  ;;; espotify.el - spotify search and play -  -*- lexical-binding: t; -*-
 
+#+begin_src emacs-lisp :noweb-ref espotify-customization
   (defgroup espotify nil
     "Access to Spotify API and clients"
     :group 'multimedia)
+
 #+end_src
 
 * Access to Spotify's API: authentication
+  :PROPERTIES:
+  :header-args: :noweb-ref espotify-body
+  :END:
 
   I am stealing most of the ideas on how to establish authenticated
   connections to the Spotify API and performing queries from
@@ -35,8 +38,10 @@ Let's start with an umbrella customization group:
 
   #+begin_src emacs-lisp
     (defvar espotify-spotify-api-url "https://api.spotify.com/v1")
+
     (defvar espotify-spotify-api-authentication-url
       "https://accounts.spotify.com/api/token")
+
   #+end_src
 
   And we're going to need as well a client id and secret for our
@@ -45,7 +50,9 @@ Let's start with an umbrella customization group:
 
   #+begin_src emacs-lisp
     (defvar espotify-client-id nil "Spotify application client ID.")
+
     (defvar espotify-client-secret nil "Spotify application client secret.")
+
   #+end_src
 
   To get valid values for them, one just needs to [[https://developer.spotify.com/my-applications][register a Spotify
@@ -56,6 +63,7 @@ Let's start with an umbrella customization group:
     (defun espotify--basic-auth-credentials ()
       (let ((credential (concat espotify-client-id ":" espotify-client-secret)))
         (concat "Basic " (base64-encode-string credential t))))
+
   #+end_src
 
   The return value of the function above is to be used as the
@@ -65,6 +73,8 @@ Let's start with an umbrella customization group:
   wrap that operation:
 
   #+begin_src emacs-lisp
+    (defvar url-http-end-of-headers)
+
     (defun espotify--with-auth-token (callback)
       (let ((url-request-method "POST")
             (url-request-data "&grant_type=client_credentials")
@@ -76,10 +86,11 @@ Let's start with an umbrella customization group:
                          (goto-char url-http-end-of-headers)
                          (funcall callback
                                   (alist-get 'access_token (json-read)))))))
+
   #+end_src
 
   For instance:
-  #+begin_src emacs-lisp :load no :tangle no
+  #+begin_src emacs-lisp :noweb-ref no
     (espotify--with-auth-token
      (lambda (token) (message "Your token is: %s" token)))
   #+end_src
@@ -90,6 +101,9 @@ Let's start with an umbrella customization group:
   usually discarded.
 
 * Search queries using the Spotify API
+  :PROPERTIES:
+  :header-args: :noweb-ref espotify-body
+  :END:
 
   We are interested in performing a search for some ~term~, of items
   of a given ~types~ (~:track~, ~:album~, ~:artist~, etc.), possibly with an
@@ -105,11 +119,12 @@ Let's start with an umbrella customization group:
                 espotify-spotify-api-url
                 (if filter (format "%s:%s" filter term) term)
                 (mapconcat #'symbol-name types ","))))
+
   #+end_src
 
   For instance:
 
-  #+begin_src emacs-lisp :load no :tangle no :results replace
+  #+begin_src emacs-lisp :results replace :noweb-ref no
     (espotify--make-search-url "dream blue turtles" '(album))
   #+end_src
 
@@ -133,6 +148,7 @@ Let's start with an umbrella customization group:
                                        (buffer-substring (point) (point-max))
                                      (decode-coding-string 'utf-8)
                                      (json-read-from-string))))))))
+
   #+end_src
 
   So we can combine this macro with ~espotify--with-auth-token~ in a
@@ -147,10 +163,11 @@ Let's start with an umbrella customization group:
 
     (defun espotify-search (callback term types &optional filter)
       (espotify-get callback (espotify--make-search-url term types filter)))
+
   #+end_src
 
   For instance:
-  #+begin_src emacs-lisp :load no :tangle no
+  #+begin_src emacs-lisp :noweb-ref no
     (defvar espotify-query-result nil)
     (espotify-search (lambda (res) (setq espotify-query-result res))
                      "dream blue turtles"
@@ -158,7 +175,7 @@ Let's start with an umbrella customization group:
     (sit-for 0)
   #+end_src
 
-  #+begin_src emacs-lisp :load no :tangle no :results replace
+  #+begin_src emacs-lisp :results replace :noweb-ref no
     (mapcar 'car espotify-query-result)
   #+end_src
 
@@ -182,11 +199,12 @@ Let's start with an umbrella customization group:
                                       types)))
                      (apply callback its)))))
         (espotify-search cb term types filter)))
+
   #+end_src
 
   For example:
 
-  #+begin_src emacs-lisp :load no :tangle no
+  #+begin_src emacs-lisp :load no :noweb-ref no
     (defvar espotify-query-result nil)
     (espotify-search* (lambda (al ar)
                         (message "Found %s albums, %s artists"
@@ -214,9 +232,13 @@ Let's start with an umbrella customization group:
                           term
                           types
                           filter)))
+
   #+end_src
 
 * Listing user resources in the Spotify API
+  :PROPERTIES:
+  :header-args: :noweb-ref no
+  :END:
 
   It is also possible to obtain lists of items of a given type for the
   current user, with a standard URL format:
@@ -224,25 +246,30 @@ Let's start with an umbrella customization group:
   #+begin_src emacs-lisp
     (defun espotify--make-user-url (type)
       (format "%s/me/%ss" espotify-spotify-api-url (symbol-name type)))
+
   #+end_src
 
   and we can then use ~espotify-get~ to offer access to our playlists,
   albums, etc.:
 
   #+begin_src emacs-lisp
+
     (defun espotify-with-user-resources (callback type)
       (espotify-get (lambda (res) (funcall callback (alist-get 'items res)))
                     (espotify--make-user-url type)))
   #+end_src
 
 * Sending commands to local players
+  :PROPERTIES:
+  :header-args: :noweb-ref espotify-body
+  :END:
 
   Once we now the URI we want to play (that ~uri~ entry in our items),
   sending it to a local player via DBUS is fairly easy.  Let's
   define a couple of customizable variables pointing to the service
   name and bus:
 
-  #+begin_src emacs-lisp
+  #+begin_src emacs-lisp :noweb-ref espotify-customization
     (defcustom espotify-service-name "mopidy"
       "Name of the DBUS service used by the client we talk to.
 
@@ -251,7 +278,9 @@ Let's start with an umbrella customization group:
       :type 'string)
 
     (defcustom espotify-use-system-bus-p t
-      "Whether to access the spotify client using the system DBUS.")
+      "Whether to access the spotify client using the system DBUS."
+      :type 'boolean)
+
   #+end_src
 
   and then using the Emacs DBUS API to send methods to it is a
@@ -270,31 +299,36 @@ Let's start with an umbrella customization group:
 
     (defun espotify-play-uri (uri)
       (espotify-call-spotify-via-dbus "OpenUri" uri))
+
   #+end_src
 
     Although we're not going to use them explicitly below, we can define
   a couple more commands that may come in handy:
 
   #+begin_src emacs-lisp
+    ;;;###autoload
     (defun espotify-play-pause ()
       (interactive)
       (espotify-call-spotify-via-dbus "PlayPause"))
 
+    ;;;###autoload
     (defun espotify-next ()
       (interactive)
       (espotify-call-spotify-via-dbus "Next"))
 
+    ;;;###autoload
     (defun espotify-previous ()
       (interactive)
       (espotify-call-spotify-via-dbus "Previous"))
+
    #+end_src
 
 * Search front-end using consult
   :PROPERTIES:
-  :header-args: :tangle espotify-consult.el
+  :header-args: :noweb-ref consult-body
   :END:
 
-  I am exploring [[https://github.com/minad/consult][consult.el]] (and friends) to replace ivy/counsel,
+  I was exploring [[https://github.com/minad/consult][consult.el]] (and friends) to replace ivy/counsel,
   inspired in part by [[https://protesilaos.com/codelog/2021-01-06-emacs-default-completion/][Protesilaos Stavrou's musings]], and liking a
   lot what i see.  Up till now, everything i had with counsel is
   supported, often in better ways, with one exception: completing
@@ -305,11 +339,6 @@ Let's start with an umbrella customization group:
   The top-level command will have this form:
 
   #+begin_src emacs-lisp
-    ;;; espotify-consult.el - consult support -  -*- lexical-binding: t; -*-
-
-    (require 'espotify)
-    (require 'consult)
-
     (defvar espotify-consult-history nil)
 
     (defun espotify-consult-by (type &optional filter)
@@ -321,12 +350,14 @@ Let's start with an umbrella customization group:
                        :history 'espotify-consult-history
                        :initial consult-async-default-split
                        :require-match t)))
+
   #+end_src
 
   where we can write an asynchronous generator of search results
   with the helper function:
 
   #+begin_src emacs-lisp
+
     (defun espotify--search-generator (type filter)
       (thread-first (consult--async-sink)
         (consult--async-refresh-immediate)
@@ -334,6 +365,7 @@ Let's start with an umbrella customization group:
         (espotify--async-search type filter)
         (consult--async-throttle)
         (consult--async-split)))
+
   #+end_src
 
   The above follows a generic consult pattern, where all functions
@@ -344,6 +376,7 @@ Let's start with an umbrella customization group:
   case:
 
   #+begin_src emacs-lisp
+
     (defun espotify--async-search (next type filter)
       (let ((current ""))
         (lambda (action)
@@ -359,6 +392,7 @@ Let's start with an umbrella customization group:
                 type
                 filter)))
             (_ (funcall next action))))))
+
   #+end_src
 
   We have introduced the convention that we're only launching a search
@@ -366,7 +400,7 @@ Let's start with an umbrella customization group:
   requests, and also played a bit with Levenshtein distance, both via
   the function =espotify-check-search-term=:
 
-  #+begin_src emacs-lisp :tangle espotify.el
+  #+begin_src emacs-lisp :noweb-ref espotify-body
     (defvar espotify-search-suffix "="
       "Suffix in the search string launching an actual Web query.")
 
@@ -380,18 +414,13 @@ Let's start with an umbrella customization group:
               ((>= (string-distance prev new) espotify-search-threshold) new))))
   #+end_src
 
-  In the consult case, a more natural choice for the search suffix is
-
-  #+begin_src emacs-lisp
-    (setq espotify-search-suffix consult-async-default-split)
-  #+end_src
-
-  When processing the results, we format them as a displayable
-  string, while hiding in a property the URI that will allow us to
-  play the item (and pass the formatter to ~consult-async--map~, in
+  When processing the results, we format them as a displayable string,
+  while hiding in a property the URI that will allow us to play the
+  item (and pass the formatter to ~consult-async--map~, in
   ~espotify--search-generator~ above):
 
-  #+begin_src emacs-lisp :tangle espotify.el
+  #+begin_src emacs-lisp :noweb-ref espotify-body
+
     (defun espotify--additional-info (x)
       (mapconcat 'identity
                  (seq-filter 'identity
@@ -413,6 +442,7 @@ Let's start with an umbrella customization group:
 
     (defun espotify--uri (cand)
       (alist-get 'uri (espotify--item cand)))
+
    #+end_src
 
    and then we make sure that we access that original string when
@@ -420,55 +450,67 @@ Let's start with an umbrella customization group:
    simply define as:
 
    #+begin_src emacs-lisp
-     (require 'seq)
+
      (defun espotify--consult-lookup (_input cands cand)
        (seq-find (lambda (x) (string= cand x)) cands))
+
    #+end_src
 
 
    With that, when we receive the final result from ~consult--read~,
    we can play the selected URI right away:
 
-   #+begin_src emacs-lisp :tangle espotify.el
+   #+begin_src emacs-lisp :noweb-ref espotify-body
+
      (defun espotify--maybe-play (cand)
        (when-let (uri (when cand (espotify--uri cand)))
          (espotify-play-uri uri)))
+
    #+end_src
 
    And here, finally, are our interactive command to search and play
    albums using consult:
 
    #+begin_src emacs-lisp
+
+     ;;;###autoload
      (defun espotify-consult-album (&optional filter)
        (interactive)
        (espotify--maybe-play (espotify-consult-by 'album filter)))
+
    #+end_src
 
    And likewise for playlists, artists and combinations thereof:
 
   #+begin_src emacs-lisp
+
+     ;;;###autoload
      (defun espotify-consult-artist (&optional filter)
        (interactive)
        (espotify--maybe-play (espotify-consult-by 'artist filter)))
 
+     ;;;###autoload
      (defun espotify-consult-track (&optional filter)
        (interactive)
        (espotify--maybe-play (espotify-consult-by 'track filter)))
 
+     ;;;###autoload
      (defun espotify-consult-playlist (&optional filter)
        (interactive)
        (espotify--maybe-play (espotify-consult-by 'playlist filter)))
+
   #+end_src
 
 * Adding metadata to candidates using Marginalia
   :PROPERTIES:
-  :header-args: :tangle espotify-consult.el
+  :header-args: :noweb-ref consult-body
   :END:
 
   Let's add metadata fields to our candidates, so that packages like
   [[https://github.com/minad/marginalia][Marginalia]] can offer it to consult or selectrum.
 
   #+begin_src emacs-lisp
+
     (defun espotify-marginalia-annotate (cand)
       (when-let (x (espotify--item cand))
         (marginalia--fields
@@ -486,11 +528,12 @@ Let's start with an umbrella customization group:
 
     (add-to-list 'marginalia-annotators-heavy
                  '(espotify-search-item . espotify-marginalia-annotate))
+
   #+end_src
 
 * Embark actions
   :PROPERTIES:
-  :header-args: :tangle espotify-embark.el
+  :header-args: :noweb-ref embark-body
   :END:
 
   In addition to the default action (play the URI in the selected
@@ -502,9 +545,6 @@ Let's start with an umbrella customization group:
   commands (as is otherwise recommended for generic embark actions).
 
   #+begin_src emacs-lisp
-    (require 'espotify-consult)
-    (require 'embark)
-
     (defun espotify--show-info (candidate)
       "Show low-level info (an alist) about selection."
       (pop-to-buffer (get-buffer-create "*espotify info*"))
@@ -548,96 +588,107 @@ Let's start with an umbrella customization group:
                  '(espotify-search-item . espotify-item-keymap))
   #+end_src
 
-* Search fronted using ivy
-  :PROPERTIES:
-  :header-args: :tangle espotify-counsel.el
-  :END:
+* Packages
+*** espotify.el (generic utilities)
+    #+begin_src emacs-lisp :tangle espotify.el
+      ;;; espotify.el --- Spotify access library  -*- lexical-binding: t; -*-
 
-  #+begin_src emacs-lisp
-    ;;; counsel-espotify.el - counsel and spotify -  -*- lexical-binding: t; -*-
-    (require 'espotify)
-    (require 'ivy)
-  #+end_src
+      <<author-boilerplate>>
+      ;; Package-Requires: ((emacs "26.1"))
 
-  It is is also not too complicated to provide a counsel collection of
-  functions.  Here, we use =ivy-read= to access the completion
-  interface, with the flag =dynamic-collection= set.  Ivy will wait
-  until we call =ivy-candidate-updates= with our items.
+      <<license>>
 
-  #+begin_src emacs-lisp
-    (defun espotify-counsel--search-by (type filter)
-      (let ((current-term ""))
-        (lambda (term)
-          (when-let (term (espotify-check-term current-term term))
-            (espotify-search-all (lambda (its)
-                                   (let ((cs (mapcar #'espotify--format-item its)))
-                                     (ivy-update-candidates cs)))
-                                 (setq current-term term)
-                                 type
-                                 filter))
-          0)))
-  #+end_src
+      ;;; Comentary:
 
-  With that, we can define our generic completing read:
+      ;; This package provides generic utilities to access Spotify and use
+      ;; its query APIs, as well as controlling local players via their
+      ;; dbus interface.
 
-  #+begin_src emacs-lisp
+      ;;; Code:
 
-    (defun espotify-counsel--play-album (candidate)
-      "Play album associated with selected item."
-      (interactive "s")
-      (let ((item (espotify--item candidate)))
-        (if-let (album (if (string= "album" (alist-get 'type item ""))
-                           item
-                         (alist-get 'album item)))
-            (espotify-play-uri (alist-get 'uri album))
-          (error "No album for %s" (alist-get 'name item)))))
+      <<espotify-customization>>
 
-    (defun espotify-search-by (type filter)
-      (ivy-read (format "Search %s: " type)
-                (espotify-counsel--search-by type filter)
-                :dynamic-collection t
-                :action `(1 ("a" espotify-counsel--play-album "Play album")
-                            ("p" espotify--maybe-play ,(format "Play %s" type)))))
-  #+end_src
+      <<espotify-body>>
 
-  and our collection of searching commands:
+      (provide 'espotify)
+      ;;; espotify.el ends here
+    #+end_src
+*** espotify-consult.el
+    #+begin_src emacs-lisp :tangle espotify-consult.el
+      ;;; espotify-consult.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
 
-  #+begin_src emacs-lisp
-    (defun espotify-counsel-album (&optional filter)
-      (interactive)
-      (espotify-search-by 'album filter))
+      <<author-boilerplate>>
+      ;; Package-Requires: ((emacs "26.1") (consult "0.5") (marginalia "0.3") (espotify "0.1"))
 
-    (defun espotify-counsel-artist (&optional filter)
-      (interactive)
-      (espotify-search-by 'artist filter))
+      <<license>>
 
-    (defun espotify-counsel-track (&optional filter)
-      (interactive)
-      (espotify-search-by 'track filter))
+      ;;; Comentary:
 
-    (defun espotify-counsel-playlist (&optional filter)
-      (interactive)
-      (espotify-search-by 'playlist filter))
-  #+end_src
+      ;; This package provides functions to interactively query Spotify
+      ;; using consult.
 
-  Simpler than our initial consult, although it's true that we already
-  had part of the job done. The nice "split search" that counsult
-  offers out of the box, though, is much more difficult to get.
+      ;;; Code:
 
-* Postamble
+      (require 'seq)
+      (require 'espotify)
+      (require 'consult)
+      (require 'marginalia)
 
-  #+begin_src emacs-lisp
-    (provide 'espotify)
-  #+end_src
+      <<consult-body>>
 
-  #+begin_src emacs-lisp :tangle espotify-consult.el
-    (provide 'espotify-consult)
-  #+end_src
+      (provide 'espotify-consult)
+      ;;; espotify-consult.el ends here
+    #+end_src
+*** espotify-embark.el
+    #+begin_src emacs-lisp :tangle espotify-embark.el
+      ;;; espotify-embark.el --- Embark actions for espotify  -*- lexical-binding: t; -*-
 
-  #+begin_src emacs-lisp :tangle espotify-embark.el
-    (provide 'espotify-embark)
-  #+end_src
+      <<author-boilerplate>>
+      ;; Package-Requires: ((emacs "26.1") (espotify-consult "0.1") (embark "0.10"))
 
-  #+begin_src emacs-lisp :tangle espotify-counsel.el
-    (provide 'espotify-counsel)
-  #+end_src
+      <<license>>
+
+      ;;; Comentary:
+
+      ;; This package provides embark actions to invoke when using
+      ;; espotify-consult.
+
+      ;;; Code:
+
+      (require 'espotify-consult)
+      (require 'embark)
+
+      <<embark-body>>
+
+      (provide 'espotify-embark)
+      ;;; espotify-embark.el ends here
+    #+end_src
+
+*** Author
+    #+begin_src emacs-lisp :noweb-ref author-boilerplate
+      ;; Author: Jose A Ortega Ruiz <jao@gnu.org>
+      ;; Maintainer: Jose A Ortega Ruiz
+      ;; Keywords: media
+      ;; License: GPL-3.0-or-later
+      ;; Version: 0.1
+      ;; Homepage: https://codeberg.org/jao/espotify
+    #+end_src
+
+*** License
+
+    #+begin_src emacs-lisp :noweb-ref license
+      ;; Copyright (C) 2021  Jose A Ortega Ruiz
+
+      ;; This program is free software; you can redistribute it and/or modify
+      ;; it under the terms of the GNU General Public License as published by
+      ;; the Free Software Foundation, either version 3 of the License, or
+      ;; (at your option) any later version.
+
+      ;; This program is distributed in the hope that it will be useful,
+      ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+      ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      ;; GNU General Public License for more details.
+
+      ;; You should have received a copy of the GNU General Public License
+      ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    #+end_src
