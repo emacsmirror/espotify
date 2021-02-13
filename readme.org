@@ -4,9 +4,9 @@
 #+filetags: emacs norss
 #+PROPERTY: header-args :tangle no :noweb tangle
 
-(/Note/: you can tangle this file (e.g., with =C-c C-v t= inside Emacs)
-into three elisp libraries: [[./espotify.el][espotify.el]], [[./espotify-consult.el][espotify-consult.el]], and
-[[./espotify-embark.el][espotify-embark.el]])
+/Note/: you can tangle this file (e.g., with =C-c C-v t= inside Emacs)
+into three elisp packages ([[./espotify.el][espotify.el]], [[./espotify-consult.el][espotify-consult.el]], and
+[[./espotify-embark.el][espotify-embark.el]]) and an example library ([[./espotify-counsel.el][espotify-counsel.el]]).
 
 We have two kinds of interaction with Spotify: via its HTTP API to
 perform operations such as search, and via our local DBUS to talk to
@@ -605,6 +605,95 @@ Let's start with an umbrella customization group:
     (add-to-list 'embark-keymap-alist
                  '(espotify-search-item . espotify-item-keymap))
   #+end_src
+* Appendix: reimplementing the ivy/counsel interface
+  :PROPERTIES:
+  :header-args: :tangle espotify-counsel.el
+  :END:
+
+  If you are an ivy/counsel user, you don't need any of the above:
+  [[https://github.com/Lautaro-Garcia/counsel-spotify][counsel-spotify]] implements similar functionality.  But i found
+  instructive to figure out how espotify can be used to reimplement
+  it.  It's pretty simple.
+
+  #+begin_src emacs-lisp
+  ;;; counsel-espotify.el - counsel and spotify -  -*- lexical-binding: t; -*-
+  (require 'espotify)
+  (require 'ivy)
+
+  (declare espotify--maybe-play)
+  (declare espotify--format-item)
+  (declare espotify--item)
+
+  #+end_src
+
+  We will use =ivy-read= to access the completion interface, with the
+  flag =dynamic-collection= set.  Ivy will wait until we call
+  =ivy-candidate-updates= with our items.
+
+  #+begin_src emacs-lisp
+
+    (defun espotify-counsel--search-by (type filter)
+      (let ((current-term ""))
+        (lambda (term)
+          (when-let (term (espotify-check-term current-term term))
+            (espotify-search-all (lambda (its)
+                                   (let ((cs (mapcar #'espotify--format-item its)))
+                                     (ivy-update-candidates cs)))
+                                 (setq current-term term)
+                                 type
+                                 filter))
+          0)))
+
+   #+end_src
+
+  With that, we can define our generic completing read:
+
+  #+begin_src emacs-lisp
+
+    (defun espotify-counsel--play-album (candidate)
+      "Play album associated with selected item."
+      (interactive "s")
+      (let ((item (espotify--item candidate)))
+        (if-let (album (if (string= "album" (alist-get 'type item ""))
+                           item
+                         (alist-get 'album item)))
+            (espotify-play-uri (alist-get 'uri album))
+          (error "No album for %s" (alist-get 'name item)))))
+
+    (defun espotify-counsel-search-by (type filter)
+      (ivy-read (format "Search %s: " type)
+                (espotify-counsel--search-by type filter)
+                :dynamic-collection t
+                :action `(1 ("a" espotify-counsel--play-album "Play album")
+                            ("p" espotify--maybe-play ,(format "Play %s" type)))))
+  #+end_src
+
+  and our collection of searching commands:
+
+  #+begin_src emacs-lisp
+    (defun espotify-counsel-album (&optional filter)
+      (interactive)
+      (espotify-counsel-search-by 'album filter))
+
+    (defun espotify-counsel-artist (&optional filter)
+      (interactive)
+      (espotify-counsel-search-by 'artist filter))
+
+    (defun espotify-counsel-track (&optional filter)
+      (interactive)
+      (espotify-counsel-search-by 'track filter))
+
+    (defun espotify-counsel-playlist (&optional filter)
+      (interactive)
+      (espotify-counsel-search-by 'playlist filter))
+
+    (provide 'counsel-espotify)
+
+  #+end_src
+
+  Simpler than our initial consult, although it's true that we already
+  had part of the job done. The nice "split search" that counsult
+  offers out of the box, though, is much more difficult to get.
 
 * Packages
 *** espotify.el (generic utilities)
