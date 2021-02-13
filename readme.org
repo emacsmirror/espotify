@@ -37,10 +37,13 @@ Let's start with an umbrella customization group:
   We start defining a couple of end-points:
 
   #+begin_src emacs-lisp
-    (defvar espotify-spotify-api-url "https://api.spotify.com/v1")
+    (defvar espotify-spotify-api-url
+      "https://api.spotify.com/v1"
+      "End-point to access Spotify's REST API.")
 
     (defvar espotify-spotify-api-authentication-url
-      "https://accounts.spotify.com/api/token")
+      "https://accounts.spotify.com/api/token"
+      "End-point to access Spotify's authentication tokens.")
 
   #+end_src
 
@@ -157,11 +160,16 @@ Let's start with an umbrella customization group:
 
   #+begin_src emacs-lisp
     (defun espotify-get (callback url)
+      "Perform a GET query to URL, receiving its results with CALLBACK."
       (espotify--with-auth-token
          (lambda (token)
            (espotify--with-query-results token url callback))))
 
     (defun espotify-search (callback term types &optional filter)
+      "Perform a search query for TERM, receiving its results with CALLBACK.
+
+    The types of resource we want is given by TYPES, and we can add an additional
+    query FILTER."
       (espotify-get callback (espotify--make-search-url term types filter)))
 
   #+end_src
@@ -192,6 +200,7 @@ Let's start with an umbrella customization group:
       (alist-get 'items (alist-get (intern (format "%ss" type)) res)))
 
     (defun espotify-search* (callback term types &optional filter)
+      "Like `espotify-search', but CALLBACK receives lists of items types."
       (let* ((types (if (listp types) types (list types)))
              (cb (lambda (res)
                    (let ((its (mapcar (lambda (tp)
@@ -226,6 +235,7 @@ Let's start with an umbrella customization group:
 
   #+begin_src emacs-lisp
     (defun espotify-search-all (callback term &optional types filter)
+      "Like `espotify-search', but CALLBACK receives a single list of results."
       (let ((types (or types '(album track artist playlist))))
         (espotify-search* (lambda (&rest items)
                             (funcall callback (apply 'append items)))
@@ -258,6 +268,10 @@ Let's start with an umbrella customization group:
       (espotify-get (lambda (res) (funcall callback (alist-get 'items res)))
                     (espotify--make-user-url type)))
   #+end_src
+
+  We're not using these functions in our packages, though, because we
+  are authenticating ourselves using an application token, not as a
+  user.
 
 * Sending commands to local players
   :PROPERTIES:
@@ -298,6 +312,7 @@ Let's start with an umbrella customization group:
                                   ,@args)))
 
     (defun espotify-play-uri (uri)
+      "Use `espotify-call-spotify-via-dbus' to play a URI denoting a resource."
       (espotify-call-spotify-via-dbus "OpenUri" uri))
 
   #+end_src
@@ -308,16 +323,19 @@ Let's start with an umbrella customization group:
   #+begin_src emacs-lisp
     ;;;###autoload
     (defun espotify-play-pause ()
+      "Toggle default Spotify player via DBUS."
       (interactive)
       (espotify-call-spotify-via-dbus "PlayPause"))
 
     ;;;###autoload
     (defun espotify-next ()
+      "Tell default Spotify player to play next track via DBUS."
       (interactive)
       (espotify-call-spotify-via-dbus "Next"))
 
     ;;;###autoload
     (defun espotify-previous ()
+      "Tell default Spotify player to play previous track via DBUS."
       (interactive)
       (espotify-call-spotify-via-dbus "Previous"))
 
@@ -400,7 +418,7 @@ Let's start with an umbrella customization group:
   requests, and also played a bit with Levenshtein distance, both via
   the function =espotify-check-search-term=:
 
-  #+begin_src emacs-lisp :noweb-ref espotify-body
+  #+begin_src emacs-lisp
     (defvar espotify-search-suffix "="
       "Suffix in the search string launching an actual Web query.")
 
@@ -419,7 +437,7 @@ Let's start with an umbrella customization group:
   item (and pass the formatter to ~consult-async--map~, in
   ~espotify--search-generator~ above):
 
-  #+begin_src emacs-lisp :noweb-ref espotify-body
+  #+begin_src emacs-lisp
 
     (defun espotify--additional-info (x)
       (mapconcat 'identity
@@ -460,7 +478,7 @@ Let's start with an umbrella customization group:
    With that, when we receive the final result from ~consult--read~,
    we can play the selected URI right away:
 
-   #+begin_src emacs-lisp :noweb-ref espotify-body
+   #+begin_src emacs-lisp
 
      (defun espotify--maybe-play (cand)
        (when-let (uri (when cand (espotify--uri cand)))

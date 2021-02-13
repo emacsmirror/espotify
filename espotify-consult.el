@@ -73,9 +73,48 @@
             filter)))
         (_ (funcall next action))))))
 
+(defvar espotify-search-suffix "="
+  "Suffix in the search string launching an actual Web query.")
+
+(defvar espotify-search-threshold 8
+  "Threshold to automatically launch an actual Web query.")
+
+(defun espotify-check-term (prev new)
+  (when (not (string-blank-p new))
+    (cond ((string-suffix-p espotify-search-suffix new)
+           (substring new 0 (- (length new) (length espotify-search-suffix))))
+          ((>= (string-distance prev new) espotify-search-threshold) new))))
+
+(defun espotify--additional-info (x)
+  (mapconcat 'identity
+             (seq-filter 'identity
+                         `(,(alist-get 'name (alist-get 'album x))
+                           ,(alist-get 'name (car (alist-get 'artists x)))
+                           ,(alist-get 'display_name (alist-get 'owner x))))
+             ", "))
+
+(defun espotify--format-item (x)
+  (propertize (format "%s%s"
+                      (alist-get 'name x)
+                      (if-let ((info (espotify--additional-info x)))
+                          (format " (%s)" info)
+                        ""))
+              'espotify-item x))
+
+(defun espotify--item (cand)
+  (get-text-property 0 'espotify-item cand))
+
+(defun espotify--uri (cand)
+  (alist-get 'uri (espotify--item cand)))
+
 
 (defun espotify--consult-lookup (_input cands cand)
   (seq-find (lambda (x) (string= cand x)) cands))
+
+
+(defun espotify--maybe-play (cand)
+  (when-let (uri (when cand (espotify--uri cand)))
+    (espotify-play-uri uri)))
 
 
 ;;;###autoload

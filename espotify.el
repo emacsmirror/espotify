@@ -47,10 +47,13 @@ alternative clients such as mopidy or spotifyd."
   :type 'boolean)
 
 
-(defvar espotify-spotify-api-url "https://api.spotify.com/v1")
+(defvar espotify-spotify-api-url
+  "https://api.spotify.com/v1"
+  "End-point to access Spotify's REST API.")
 
 (defvar espotify-spotify-api-authentication-url
-  "https://accounts.spotify.com/api/token")
+  "https://accounts.spotify.com/api/token"
+  "End-point to access Spotify's authentication tokens.")
 
 (defvar espotify-client-id nil "Spotify application client ID.")
 
@@ -97,17 +100,23 @@ alternative clients such as mopidy or spotifyd."
                                  (json-read-from-string))))))))
 
 (defun espotify-get (callback url)
+  "Perform a GET query to URL, receiving its results with CALLBACK."
   (espotify--with-auth-token
      (lambda (token)
        (espotify--with-query-results token url callback))))
 
 (defun espotify-search (callback term types &optional filter)
+  "Perform a search query for TERM, receiving its results with CALLBACK.
+
+The types of resource we want is given by TYPES, and we can add an additional
+query FILTER."
   (espotify-get callback (espotify--make-search-url term types filter)))
 
 (defun espotify--type-items (res type)
   (alist-get 'items (alist-get (intern (format "%ss" type)) res)))
 
 (defun espotify-search* (callback term types &optional filter)
+  "Like `espotify-search', but CALLBACK receives lists of items types."
   (let* ((types (if (listp types) types (list types)))
          (cb (lambda (res)
                (let ((its (mapcar (lambda (tp)
@@ -117,6 +126,7 @@ alternative clients such as mopidy or spotifyd."
     (espotify-search cb term types filter)))
 
 (defun espotify-search-all (callback term &optional types filter)
+  "Like `espotify-search', but CALLBACK receives a single list of results."
   (let ((types (or types '(album track artist playlist))))
     (espotify-search* (lambda (&rest items)
                         (funcall callback (apply 'append items)))
@@ -135,61 +145,26 @@ alternative clients such as mopidy or spotifyd."
                               ,@args)))
 
 (defun espotify-play-uri (uri)
+  "Use `espotify-call-spotify-via-dbus' to play a URI denoting a resource."
   (espotify-call-spotify-via-dbus "OpenUri" uri))
 
 ;;;###autoload
 (defun espotify-play-pause ()
+  "Toggle default Spotify player via DBUS."
   (interactive)
   (espotify-call-spotify-via-dbus "PlayPause"))
 
 ;;;###autoload
 (defun espotify-next ()
+  "Tell default Spotify player to play next track via DBUS."
   (interactive)
   (espotify-call-spotify-via-dbus "Next"))
 
 ;;;###autoload
 (defun espotify-previous ()
+  "Tell default Spotify player to play previous track via DBUS."
   (interactive)
   (espotify-call-spotify-via-dbus "Previous"))
-
-(defvar espotify-search-suffix "="
-  "Suffix in the search string launching an actual Web query.")
-
-(defvar espotify-search-threshold 8
-  "Threshold to automatically launch an actual Web query.")
-
-(defun espotify-check-term (prev new)
-  (when (not (string-blank-p new))
-    (cond ((string-suffix-p espotify-search-suffix new)
-           (substring new 0 (- (length new) (length espotify-search-suffix))))
-          ((>= (string-distance prev new) espotify-search-threshold) new))))
-
-(defun espotify--additional-info (x)
-  (mapconcat 'identity
-             (seq-filter 'identity
-                         `(,(alist-get 'name (alist-get 'album x))
-                           ,(alist-get 'name (car (alist-get 'artists x)))
-                           ,(alist-get 'display_name (alist-get 'owner x))))
-             ", "))
-
-(defun espotify--format-item (x)
-  (propertize (format "%s%s"
-                      (alist-get 'name x)
-                      (if-let ((info (espotify--additional-info x)))
-                          (format " (%s)" info)
-                        ""))
-              'espotify-item x))
-
-(defun espotify--item (cand)
-  (get-text-property 0 'espotify-item cand))
-
-(defun espotify--uri (cand)
-  (alist-get 'uri (espotify--item cand)))
-
-
-(defun espotify--maybe-play (cand)
-  (when-let (uri (when cand (espotify--uri cand)))
-    (espotify-play-uri uri)))
 
 
 (provide 'espotify)
