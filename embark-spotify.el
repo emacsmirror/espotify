@@ -25,8 +25,11 @@
 
 ;;; Commentary:
 
-;; This package provides embark actions to invoke when using
-;; the commands in consult-spotify.
+;; This package provides embark actions to invoke when using the
+;; commands in consult-spotify.  To enable them, simply require
+;; it after loading consult-spotify, e.g.:
+;;
+;;   (with-eval-after-load 'consult-spotify (require 'embark-spotify))
 
 ;; This file has been automatically generated from the literate program
 ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
