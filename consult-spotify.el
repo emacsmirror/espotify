@@ -157,6 +157,7 @@
 
 
 (defun consult-spotify--annotate (cand)
+  "Compute marginalia fields for candidate CAND."
   (when-let (x (consult-spotify--item cand))
     (marginalia--fields
      ((alist-get 'type x "") :face 'marginalia-mode :width 10)
