@@ -1,4 +1,4 @@
-;;; espotify-embark.el --- Embark actions for espotify  -*- lexical-binding: t; -*-
+;;; embark-spotify.el --- Embark actions for espotify  -*- lexical-binding: t; -*-
 
 ;; Author: Jose A Ortega Ruiz <jao@gnu.org>
 ;; Maintainer: Jose A Ortega Ruiz
@@ -6,7 +6,7 @@
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
 ;; Homepage: https://codeberg.org/jao/espotify
-;; Package-Requires: ((emacs "26.1") (espotify-consult "0.1") (embark "0.10"))
+;; Package-Requires: ((emacs "26.1") (consult-spotify "0.1") (embark "0.10"))
 
 ;; Copyright (C) 2021  Jose A Ortega Ruiz
 
@@ -26,14 +26,14 @@
 ;;; Comentary:
 
 ;; This package provides embark actions to invoke when using
-;; the commands in espotify-consult.
+;; the commands in consult-spotify.
 
 ;; This file has been automatically generated from the literate program
 ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
 
 ;;; Code:
 
-(require 'espotify-consult)
+(require 'consult-spotify)
 (require 'embark)
 
 (defun espotify--show-info (candidate)
@@ -78,5 +78,5 @@
 (add-to-list 'embark-keymap-alist
              '(espotify-search-item . espotify-item-keymap))
 
-(provide 'espotify-embark)
-;;; espotify-embark.el ends here
+(provide 'embark-spotify)
+;;; embark-spotify.el ends here

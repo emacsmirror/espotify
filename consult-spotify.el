@@ -1,4 +1,4 @@
-;;; espotify-consult.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
+;;; consult-spotify.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
 
 ;; Author: Jose A Ortega Ruiz <jao@gnu.org>
 ;; Maintainer: Jose A Ortega Ruiz
@@ -27,8 +27,8 @@
 
 ;; This package provides functions to interactively query
 ;; Spotify using consult.  Its main entry points are the
-;; commands `espotify-consult-album', `espotify-consult-artist',
-;; `espotify-consult-playlist' and `espotify-consult-track'
+;; commands `consult-spotify-album', `consult-spotify-artist',
+;; `consult-spotify-playlist' and `consult-spotify-track'
 
 ;; This file has been automatically generated from the literate program
 ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
@@ -40,15 +40,15 @@
 (require 'consult)
 (require 'marginalia)
 
-(defvar espotify-consult-history nil)
+(defvar consult-spotify-history nil)
 
-(defun espotify-consult-by (type &optional filter)
+(defun consult-spotify-by (type &optional filter)
   (let ((orderless-matching-styles '(orderless-literal)))
     (consult--read (espotify--search-generator type filter)
                    :prompt (format "Search %ss: " type)
                    :lookup 'espotify--consult-lookup
                    :category 'espotify-search-item
-                   :history 'espotify-consult-history
+                   :history 'consult-spotify-history
                    :initial consult-async-default-split
                    :require-match t)))
 
@@ -123,25 +123,25 @@
 
 
 ;;;###autoload
-(defun espotify-consult-album (&optional filter)
+(defun consult-spotify-album (&optional filter)
   (interactive)
-  (espotify--maybe-play (espotify-consult-by 'album filter)))
+  (espotify--maybe-play (consult-spotify-by 'album filter)))
 
 
 ;;;###autoload
-(defun espotify-consult-artist (&optional filter)
+(defun consult-spotify-artist (&optional filter)
   (interactive)
-  (espotify--maybe-play (espotify-consult-by 'artist filter)))
+  (espotify--maybe-play (consult-spotify-by 'artist filter)))
 
 ;;;###autoload
-(defun espotify-consult-track (&optional filter)
+(defun consult-spotify-track (&optional filter)
   (interactive)
-  (espotify--maybe-play (espotify-consult-by 'track filter)))
+  (espotify--maybe-play (consult-spotify-by 'track filter)))
 
 ;;;###autoload
-(defun espotify-consult-playlist (&optional filter)
+(defun consult-spotify-playlist (&optional filter)
   (interactive)
-  (espotify--maybe-play (espotify-consult-by 'playlist filter)))
+  (espotify--maybe-play (consult-spotify-by 'playlist filter)))
 
 
 (defun espotify-marginalia-annotate (cand)
@@ -163,5 +163,5 @@
              '(espotify-search-item . espotify-marginalia-annotate))
 
 
-(provide 'espotify-consult)
-;;; espotify-consult.el ends here
+(provide 'consult-spotify)
+;;; consult-spotify.el ends here

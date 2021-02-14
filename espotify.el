@@ -26,10 +26,10 @@
 ;;; Comentary:
 
 ;; This package provides generic utilities to access Spotify and use
-;; its query APIs, as well as controlling local players via their
-;; dbus interface.  Although they can be used in other programs,
-;; the functions in this package are intended for espotify-counsel
-;; and espotify-embark.
+;; its query APIs, as well as controlling local players via their dbus
+;; interface.  Although they can be used in other programs, the
+;; functions in this package were created for use in consult-spotify
+;; and embark-spotify.
 
 ;; This file has been automatically generated from the literate program
 ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org

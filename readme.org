@@ -5,8 +5,8 @@
 #+PROPERTY: header-args :tangle no :noweb tangle
 
 /Note/: you can tangle this file (e.g., with =C-c C-v t= inside Emacs)
-into three elisp packages ([[./espotify.el][espotify.el]], [[./espotify-consult.el][espotify-consult.el]], and
-[[./espotify-embark.el][espotify-embark.el]]) and an example library ([[./espotify-counsel.el][espotify-counsel.el]]).
+into three elisp packages ([[./espotify.el][espotify.el]], [[./espotify-consult.el][consult-spotify.el]], and
+[[./espotify-embark.el][embark-spotify.el]]) and an example library ([[./espotify-counsel.el][espotify-counsel.el]]).
 
 We have two kinds of interaction with Spotify: via its HTTP API to
 perform operations such as search, and via our local DBUS to talk to
@@ -353,15 +353,15 @@ Let's start with an umbrella customization group:
   The top-level command will have this form:
 
   #+begin_src emacs-lisp
-    (defvar espotify-consult-history nil)
+    (defvar consult-spotify-history nil)
 
-    (defun espotify-consult-by (type &optional filter)
+    (defun consult-spotify-by (type &optional filter)
       (let ((orderless-matching-styles '(orderless-literal)))
         (consult--read (espotify--search-generator type filter)
                        :prompt (format "Search %ss: " type)
                        :lookup 'espotify--consult-lookup
                        :category 'espotify-search-item
-                       :history 'espotify-consult-history
+                       :history 'consult-spotify-history
                        :initial consult-async-default-split
                        :require-match t)))
 
@@ -488,9 +488,9 @@ Let's start with an umbrella customization group:
    #+begin_src emacs-lisp
 
      ;;;###autoload
-     (defun espotify-consult-album (&optional filter)
+     (defun consult-spotify-album (&optional filter)
        (interactive)
-       (espotify--maybe-play (espotify-consult-by 'album filter)))
+       (espotify--maybe-play (consult-spotify-by 'album filter)))
 
    #+end_src
 
@@ -499,19 +499,19 @@ Let's start with an umbrella customization group:
    #+begin_src emacs-lisp
 
      ;;;###autoload
-     (defun espotify-consult-artist (&optional filter)
+     (defun consult-spotify-artist (&optional filter)
        (interactive)
-       (espotify--maybe-play (espotify-consult-by 'artist filter)))
+       (espotify--maybe-play (consult-spotify-by 'artist filter)))
 
      ;;;###autoload
-     (defun espotify-consult-track (&optional filter)
+     (defun consult-spotify-track (&optional filter)
        (interactive)
-       (espotify--maybe-play (espotify-consult-by 'track filter)))
+       (espotify--maybe-play (consult-spotify-by 'track filter)))
 
      ;;;###autoload
-     (defun espotify-consult-playlist (&optional filter)
+     (defun consult-spotify-playlist (&optional filter)
        (interactive)
-       (espotify--maybe-play (espotify-consult-by 'playlist filter)))
+       (espotify--maybe-play (consult-spotify-by 'playlist filter)))
 
    #+end_src
 
@@ -709,7 +709,7 @@ Let's start with an umbrella customization group:
       ;; its query APIs, as well as controlling local players via their
       ;; dbus interface.  Although they can be used in other programs,
       ;; the functions in this package are intended for espotify-counsel
-      ;; and espotify-embark.
+      ;; and embark-spotify.
 
       ;; This file has been automatically generated from the literate program
       ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
@@ -723,9 +723,9 @@ Let's start with an umbrella customization group:
       (provide 'espotify)
       ;;; espotify.el ends here
     #+end_src
-*** espotify-consult.el
-    #+begin_src emacs-lisp :tangle espotify-consult.el
-      ;;; espotify-consult.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
+*** consult-spotify.el
+    #+begin_src emacs-lisp :tangle consult-spotify.el
+      ;;; consult-spotify.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
 
       <<author-boilerplate>>
       ;; Package-Requires: ((emacs "26.1") (consult "0.5") (marginalia "0.3") (espotify "0.1"))
@@ -736,8 +736,8 @@ Let's start with an umbrella customization group:
 
       ;; This package provides functions to interactively query
       ;; Spotify using consult.  Its main entry points are the
-      ;; commands `espotify-consult-album', `espotify-consult-artist',
-      ;; `espotify-consult-playlist' and `espotify-consult-track'
+      ;; commands `consult-spotify-album', `consult-spotify-artist',
+      ;; `consult-spotify-playlist' and `consult-spotify-track'
 
       ;; This file has been automatically generated from the literate program
       ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
@@ -751,35 +751,35 @@ Let's start with an umbrella customization group:
 
       <<consult-body>>
 
-      (provide 'espotify-consult)
-      ;;; espotify-consult.el ends here
+      (provide 'consult-spotify)
+      ;;; consult-spotify.el ends here
     #+end_src
-*** espotify-embark.el
-    #+begin_src emacs-lisp :tangle espotify-embark.el
-      ;;; espotify-embark.el --- Embark actions for espotify  -*- lexical-binding: t; -*-
+*** embark-spotify.el
+    #+begin_src emacs-lisp :tangle embark-spotify.el
+      ;;; embark-spotify.el --- Embark actions for espotify  -*- lexical-binding: t; -*-
 
       <<author-boilerplate>>
-      ;; Package-Requires: ((emacs "26.1") (espotify-consult "0.1") (embark "0.10"))
+      ;; Package-Requires: ((emacs "26.1") (consult-spotify "0.1") (embark "0.10"))
 
       <<license>>
 
       ;;; Comentary:
 
       ;; This package provides embark actions to invoke when using
-      ;; the commands in espotify-consult.
+      ;; the commands in consult-spotify.
 
       ;; This file has been automatically generated from the literate program
       ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
 
       ;;; Code:
 
-      (require 'espotify-consult)
+      (require 'consult-spotify)
       (require 'embark)
 
       <<embark-body>>
 
-      (provide 'espotify-embark)
-      ;;; espotify-embark.el ends here
+      (provide 'embark-spotify)
+      ;;; embark-spotify.el ends here
     #+end_src
 
 *** Author
