@@ -2,7 +2,7 @@
 
 ;; Author: Jose A Ortega Ruiz <jao@gnu.org>
 ;; Maintainer: Jose A Ortega Ruiz
-;; Keywords: media
+;; Keywords: multimedia
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
 ;; Homepage: https://codeberg.org/jao/espotify
@@ -23,7 +23,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-;;; Comentary:
+;;; Commentary:
 
 ;; This package provides functions to interactively query
 ;; Spotify using consult.  Its main entry points are the
@@ -44,25 +44,25 @@
 
 (defun consult-spotify-by (type &optional filter)
   (let ((orderless-matching-styles '(orderless-literal)))
-    (consult--read (espotify--search-generator type filter)
+    (consult--read (consult-spotify--search-generator type filter)
                    :prompt (format "Search %ss: " type)
-                   :lookup 'espotify--consult-lookup
-                   :category 'espotify-search-item
+                   :lookup 'consult-spotify--consult-lookup
+                   :category 'spotify-search-item
                    :history 'consult-spotify-history
                    :initial consult-async-default-split
                    :require-match t)))
 
 
-(defun espotify--search-generator (type filter)
+(defun consult-spotify--search-generator (type filter)
   (thread-first (consult--async-sink)
     (consult--async-refresh-immediate)
-    (consult--async-map #'espotify--format-item)
-    (espotify--async-search type filter)
+    (consult--async-map #'consult-spotify--format-item)
+    (consult-spotify--async-search type filter)
     (consult--async-throttle)
     (consult--async-split)))
 
 
-(defun espotify--async-search (next type filter)
+(defun consult-spotify--async-search (next type filter)
   (let ((current ""))
     (lambda (action)
       (pcase action
@@ -78,19 +78,28 @@
             filter)))
         (_ (funcall next action))))))
 
-(defvar espotify-search-suffix "="
+(defvar consult-spotify-search-suffix "="
   "Suffix in the search string launching an actual Web query.")
 
-(defvar espotify-search-threshold 8
+(defvar consult-spotify-search-threshold 8
   "Threshold to automatically launch an actual Web query.")
 
-(defun espotify-check-term (prev new)
-  (when (not (string-blank-p new))
-    (cond ((string-suffix-p espotify-search-suffix new)
-           (substring new 0 (- (length new) (length espotify-search-suffix))))
-          ((>= (string-distance prev new) espotify-search-threshold) new))))
+(defun consult-spotify--d (a b)
+  "Distance between strings A and B."
+  (if (fboundp 'string-distance)
+      (string-distance a b)
+    (abs (- (length a) (length b)))))
 
-(defun espotify--additional-info (x)
+(defun consult-spotify-check-term (prev new)
+  "Compare search terms PREV and NEW return the one we should search, if any."
+  (when (not (string-blank-p new))
+    (cond ((string-suffix-p consult-spotify-search-suffix new)
+           (substring new 0 (- (length new)
+                               (length consult-spotify-search-suffix))))
+          ((>= (consult-spotify--d prev new) consult-spotify-search-threshold)
+           new))))
+
+(defun consult-spotify--additional-info (x)
   (mapconcat 'identity
              (seq-filter 'identity
                          `(,(alist-get 'name (alist-get 'album x))
@@ -98,54 +107,58 @@
                            ,(alist-get 'display_name (alist-get 'owner x))))
              ", "))
 
-(defun espotify--format-item (x)
+(defun consult-spotify--format-item (x)
   (propertize (format "%s%s"
                       (alist-get 'name x)
-                      (if-let ((info (espotify--additional-info x)))
+                      (if-let ((info (consult-spotify--additional-info x)))
                           (format " (%s)" info)
                         ""))
               'espotify-item x))
 
-(defun espotify--item (cand)
+(defun consult-spotify--item (cand)
   (get-text-property 0 'espotify-item cand))
 
-(defun espotify--uri (cand)
-  (alist-get 'uri (espotify--item cand)))
+(defun consult-spotify--uri (cand)
+  (alist-get 'uri (consult-spotify--item cand)))
 
 
-(defun espotify--consult-lookup (_input cands cand)
+(defun consult-spotify--consult-lookup (_input cands cand)
   (seq-find (lambda (x) (string= cand x)) cands))
 
 
-(defun espotify--maybe-play (cand)
-  (when-let (uri (when cand (espotify--uri cand)))
+(defun consult-spotify--maybe-play (cand)
+  (when-let (uri (when cand (consult-spotify--uri cand)))
     (espotify-play-uri uri)))
 
 
 ;;;###autoload
-(defun consult-spotify-album (&optional filter)
+(defun consult-spotify-album ()
+  "Query spotify for an album using consult."
   (interactive)
-  (espotify--maybe-play (consult-spotify-by 'album filter)))
+  (consult-spotify--maybe-play (consult-spotify-by 'album)))
 
 
 ;;;###autoload
-(defun consult-spotify-artist (&optional filter)
+(defun consult-spotify-artist ()
+  "Query spotify for an artist using consult."
   (interactive)
-  (espotify--maybe-play (consult-spotify-by 'artist filter)))
+  (consult-spotify--maybe-play (consult-spotify-by 'artist)))
 
 ;;;###autoload
-(defun consult-spotify-track (&optional filter)
+(defun consult-spotify-track ()
+  "Query spotify for a track using consult."
   (interactive)
-  (espotify--maybe-play (consult-spotify-by 'track filter)))
+  (consult-spotify--maybe-play (consult-spotify-by 'track)))
 
 ;;;###autoload
-(defun consult-spotify-playlist (&optional filter)
+(defun consult-spotify-playlist ()
+  "Query spotify for a track using consult."
   (interactive)
-  (espotify--maybe-play (consult-spotify-by 'playlist filter)))
+  (consult-spotify--maybe-play (consult-spotify-by 'playlist)))
 
 
-(defun espotify-marginalia-annotate (cand)
-  (when-let (x (espotify--item cand))
+(defun consult-spotify--annotate (cand)
+  (when-let (x (consult-spotify--item cand))
     (marginalia--fields
      ((alist-get 'type x "") :face 'marginalia-mode :width 10)
      ((if-let (d (alist-get 'duration_ms x))
@@ -160,7 +173,7 @@
       :face 'marginalia-date :width 10))))
 
 (add-to-list 'marginalia-annotators-heavy
-             '(espotify-search-item . espotify-marginalia-annotate))
+             '(spotify-search-item . consult-spotify--annotate))
 
 
 (provide 'consult-spotify)
