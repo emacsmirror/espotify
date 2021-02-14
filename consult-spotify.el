@@ -43,14 +43,13 @@
 (defvar consult-spotify-history nil)
 
 (defun consult-spotify-by (type &optional filter)
-  (let ((orderless-matching-styles '(orderless-literal)))
-    (consult--read (consult-spotify--search-generator type filter)
-                   :prompt (format "Search %ss: " type)
-                   :lookup 'consult-spotify--consult-lookup
-                   :category 'spotify-search-item
-                   :history 'consult-spotify-history
-                   :initial consult-async-default-split
-                   :require-match t)))
+  (consult--read (consult-spotify--search-generator type filter)
+                 :prompt (format "Search %ss: " type)
+                 :lookup 'consult-spotify--consult-lookup
+                 :category 'spotify-search-item
+                 :history 'consult-spotify-history
+                 :initial consult-async-default-split
+                 :require-match t))
 
 
 (defun consult-spotify--search-generator (type filter)
@@ -67,7 +66,7 @@
     (lambda (action)
       (pcase action
         ((pred stringp)
-         (when-let (term (espotify-check-term current action))
+         (when-let (term (consult-spotify-check-term current action))
            (setq current term)
            (espotify-search-all
             (lambda (x)
