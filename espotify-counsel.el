@@ -6,10 +6,10 @@
 (defun espotify-counsel--search-by (type filter)
   (let ((current-term ""))
     (lambda (term)
-      (when-let (term (consult-spotify-check-term current-term term))
+      (when-let (term (espotify-check-term current-term term))
         (espotify-search-all
          (lambda (its)
-           (let ((cs (mapcar #'consult-spotify--format-item its)))
+           (let ((cs (mapcar #'espotify-format-item its)))
              (ivy-update-candidates cs)))
          (setq current-term term)
          type
@@ -19,7 +19,7 @@
 (defun espotify-counsel--play-album (candidate)
   "Play album associated with selected item."
   (interactive "s")
-  (let ((item (consult-spotify--item candidate)))
+  (let ((item (espotify-candidate-metadata candidate)))
     (if-let (album (if (string= "album" (alist-get 'type item ""))
                        item
                      (alist-get 'album item)))
@@ -31,7 +31,7 @@
             (espotify-counsel--search-by type filter)
             :dynamic-collection t
             :action `(1 ("a" espotify-counsel--play-album "Play album")
-                        ("p" consult-spotify--maybe-play ,(format "Play %s" type)))))
+                        ("p" espotify-play-candidate ,(format "Play %s" type)))))
 
 (defun espotify-counsel-album (&optional filter)
   (interactive)

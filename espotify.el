@@ -25,11 +25,11 @@
 
 ;;; Commentary:
 
-;; This package provides generic utilities to access Spotify and use
-;; its query APIs, as well as controlling local players via their
-;; dbus interface.  Although they can be used in other programs,
-;; the functions in this package are intended for espotify-counsel
-;; and embark-spotify.
+;; This package provides generic utilities to access Spotify and
+;; use its query APIs, as well as controlling local players via
+;; their dbus interface.  Although they can be used in other
+;; programs, the functions in this package were originally
+;; intended for consult-spotify and ivy-spotify.
 
 ;; This file has been automatically generated from the literate program
 ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
@@ -139,7 +139,51 @@ query FILTER."
                       types
                       filter)))
 
-(defun espotify-call-spotify-via-dbus (method &rest args)
+(defun espotify--additional-item-info (item)
+  "Helper creating a string description of ITEM's metadata."
+  (mapconcat 'identity
+             (seq-filter 'identity
+                         `(,(alist-get 'name (alist-get 'album item))
+                           ,(alist-get 'name (car (alist-get 'artists item)))
+                           ,(alist-get 'display_name (alist-get 'owner item))))
+             ", "))
+
+;;;###autoload
+(defun espotify-format-item (item)
+  "Format the search result ITEM as a string with additional metadata.
+The metadata will be accessible via `espotify-candidate-metadata'."
+  (propertize (format "%s%s"
+                      (alist-get 'name item)
+                      (if-let ((info (espotify--additional-item-info item)))
+                          (format " (%s)" info)
+                        ""))
+              'espotify-item item))
+
+;;;###autoload
+(defun espotify-candidate-metadata (cand)
+  "Extract from CANDIDATE (as returned by `espotify-format-item') its metadata."
+  (get-text-property 0 'espotify-item cand))
+
+(defvar espotify-search-suffix "="
+  "Suffix in the search string launching an actual Web query.")
+
+(defvar espotify-search-threshold 8
+  "Threshold to automatically launch an actual Web query.")
+
+(defun espotify--distance (a b)
+  "Distance between strings A and B."
+  (if (fboundp 'string-distance)
+      (string-distance a b)
+    (abs (- (length a) (length b)))))
+
+(defun espotify-check-term (prev new)
+  "Compare search terms PREV and NEW return the one we should search, if any."
+  (when (not (string-blank-p new))
+    (cond ((string-suffix-p espotify-search-suffix new)
+           (substring new 0 (- (length new)
+                               (length espotify-search-suffix))))
+          ((>= (espotify--distance prev new) espotify-search-threshold) new))))
+(defun espotify--dbus-call (method &rest args)
   "Tell Spotify to execute METHOD with ARGS through DBUS."
   (apply #'dbus-call-method `(,(if espotify-use-system-bus-p :system :session)
                               ,(format "org.mpris.MediaPlayer2.%s"
@@ -149,27 +193,66 @@ query FILTER."
                               ,method
                               ,@args)))
 
+;;;###autoload
 (defun espotify-play-uri (uri)
-  "Use `espotify-call-spotify-via-dbus' to play a URI denoting a resource."
-  (espotify-call-spotify-via-dbus "OpenUri" uri))
+  "Use a DBUS call to play a URI denoting a resource."
+  (espotify--dbus-call "OpenUri" uri))
+
+;;;###autoload
+(defun espotify-play-candidate (cand)
+ "If CAND is a formatted item string and it has a URL, play it."
+ (when-let (uri (alist-get 'uri (espotify-candidate-metadata cand)))
+   (espotify-play-uri uri)))
 
 ;;;###autoload
 (defun espotify-play-pause ()
   "Toggle default Spotify player via DBUS."
   (interactive)
-  (espotify-call-spotify-via-dbus "PlayPause"))
+  (espotify--dbus-call "PlayPause"))
 
 ;;;###autoload
 (defun espotify-next ()
   "Tell default Spotify player to play next track via DBUS."
   (interactive)
-  (espotify-call-spotify-via-dbus "Next"))
+  (espotify--dbus-call "Next"))
 
 ;;;###autoload
 (defun espotify-previous ()
   "Tell default Spotify player to play previous track via DBUS."
   (interactive)
-  (espotify-call-spotify-via-dbus "Previous"))
+  (espotify--dbus-call "Previous"))
+
+;;;###autoload
+(defun espotify-show-candidate-info (candidate)
+  "Show low-level info (an alist) about CANDIDATE."
+  (pop-to-buffer (get-buffer-create "*espotify info*"))
+  (read-only-mode -1)
+  (delete-region (point-min) (point-max))
+  (insert (propertize candidate 'face 'bold))
+  (newline)
+  (when-let (item (espotify-candidate-metadata candidate))
+    (insert (pp-to-string item)))
+  (newline)
+  (goto-char (point-min))
+  (read-only-mode 1))
+
+;;;###autoload
+(defun espotify-play-candidate-album (candidate)
+  "Play album associated with selected CANDIDATE."
+  (when-let (item (espotify-candidate-metadata candidate))
+    (if-let (album (if (string= "album" (alist-get 'type item ""))
+                       item
+                     (alist-get 'album item)))
+        (espotify-play-uri (alist-get 'uri album))
+      (error "No album for %s" (alist-get 'name item)))))
+
+;;;###autoload
+(defun espotify-yank-candidate-url (candidate)
+  "Add to kill ring the Spotify URL of this CANDIDATE"
+  (when-let (item (espotify-candidate-metadata candidate))
+    (if-let (url (alist-get 'spotify (alist-get 'external_urls item)))
+        (kill-new url)
+      (message "No spotify URL for this candidate"))))
 
 
 (provide 'espotify)
