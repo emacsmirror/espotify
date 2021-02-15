@@ -48,10 +48,14 @@ Let's start with an umbrella customization group:
     application, which i am again defining as variables since i expect
     them to be set in some secure manner instead of via customize:
 
-    #+begin_src emacs-lisp
-      (defvar espotify-client-id nil "Spotify application client ID.")
+    #+begin_src emacs-lisp :noweb-ref espotify-customization
+      (defcustom espotify-client-id ""
+        "Spotify application client ID."
+        :type 'string)
 
-      (defvar espotify-client-secret nil "Spotify application client secret.")
+      (defcustom espotify-client-secret ""
+        "Spotify application client secret."
+        :type 'string)
 
     #+end_src
 
@@ -753,9 +757,7 @@ Let's start with an umbrella customization group:
       ;; their dbus interface.  Although they can be used in other
       ;; programs, the functions in this package were originally
       ;; intended for consult-spotify and ivy-spotify.
-
-      ;; This file has been automatically generated from the literate program
-      ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
+      <<spotify-app-blurb>>
 
       ;;; Code:
 
@@ -780,10 +782,10 @@ Let's start with an umbrella customization group:
       ;; This package provides functions to interactively query
       ;; Spotify using consult.  Its main entry points are the
       ;; commands `consult-spotify-album', `consult-spotify-artist',
-      ;; `consult-spotify-playlist' and `consult-spotify-track'
-
-      ;; This file has been automatically generated from the literate program
-      ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
+      ;; `consult-spotify-playlist' and `consult-spotify-track'.
+      ;;
+      ;; This package is implemeted using the espotify library.
+      <<spotify-app-blurb>>
 
       ;;; Code:
 
@@ -809,10 +811,8 @@ Let's start with an umbrella customization group:
       ;;; Commentary:
 
       ;; This package provides a counsel interface to spotify's search API,
-      ;; analogous to counsel-spotify.
-
-      ;; This file has been automatically generated from the literate program
-      ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
+      ;; analogous to counsel-spotify, using the smaller espotify library.
+      <<spotify-app-blurb>>
 
       ;;; Code:
 
@@ -824,7 +824,16 @@ Let's start with an umbrella customization group:
       (provide 'ivy-spotify)
       ;;; ivy-spotify.el ends here
     #+end_src
+*** Spofity app blurb
+    #+begin_src emacs-lisp :noweb-ref spotify-app-blurb
+      ;; For espotify to work, you need to set valid values for
+      ;; `espotify-client-id' and `espotify-client-secret'.  To get
+      ;; valid values for them, one just needs to register a spotify
+      ;; application at https://developer.spotify.com/my-applications
 
+      ;; All .el files have been automatically generated from the literate program
+      ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
+    #+end_src
 *** Author
     #+begin_src emacs-lisp :noweb-ref author-boilerplate
       ;; Author: Jose A Ortega Ruiz <jao@gnu.org>

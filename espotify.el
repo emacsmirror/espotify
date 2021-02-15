@@ -30,8 +30,12 @@
 ;; their dbus interface.  Although they can be used in other
 ;; programs, the functions in this package were originally
 ;; intended for consult-spotify and ivy-spotify.
+;; For espotify to work, you need to set valid values for
+;; `espotify-client-id' and `espotify-client-secret'.  To get
+;; valid values for them, one just needs to register a spotify
+;; application at https://developer.spotify.com/my-applications
 
-;; This file has been automatically generated from the literate program
+;; All .el files have been automatically generated from the literate program
 ;; https://codeberg.org/jao/espotify/src/branch/main/readme.org
 
 ;;; Code:
@@ -39,6 +43,14 @@
 (defgroup espotify nil
   "Access to Spotify API and clients"
   :group 'multimedia)
+
+(defcustom espotify-client-id ""
+  "Spotify application client ID."
+  :type 'string)
+
+(defcustom espotify-client-secret ""
+  "Spotify application client secret."
+  :type 'string)
 
 (defcustom espotify-service-name "mopidy"
   "Name of the DBUS service used by the client we talk to.
@@ -59,10 +71,6 @@ alternative clients such as mopidy or spotifyd."
 (defvar espotify-spotify-api-authentication-url
   "https://accounts.spotify.com/api/token"
   "End-point to access Spotify's authentication tokens.")
-
-(defvar espotify-client-id nil "Spotify application client ID.")
-
-(defvar espotify-client-secret nil "Spotify application client secret.")
 
 (defun espotify--basic-auth-credentials ()
   (let ((credential (concat espotify-client-id ":" espotify-client-secret)))
