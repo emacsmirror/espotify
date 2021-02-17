@@ -30,7 +30,7 @@ Let's start with an umbrella customization group:
     :header-args: :noweb-ref espotify-body
     :END:
 *** Authentication
-    <<authentication-token>>
+
     We start defining a couple of end-points:
 
     #+begin_src emacs-lisp
@@ -132,10 +132,9 @@ Let's start with an umbrella customization group:
     #+RESULTS:
     : https://api.spotify.com/v1/search?q=dream%20blue%20turtles&type=album&limit=50
 
-    If we have an [[authentication-token][authentication token]] and a
-    search URL in our hands, we can use them as in the following
-    helper function, which will calls the given callback with the
-    results of the query:
+    If we have an [[*Access to Spotify's API: authentication][authorisation token]] and a search URL in our hands,
+    we can use them as in the following helper function, which will
+    calls the given callback with the results of the query:
 
     #+begin_src emacs-lisp
       (defun espotify--with-query-results (token url callback)
@@ -249,7 +248,7 @@ Let's start with an umbrella customization group:
   :header-args: :noweb-ref espotify-body
   :END:
 *** Search results as completion candidates
-    <<search-and-completion>>
+
     As we've seen in the previous section, our search callbacks will
     receive search results as alists, which we've been calling /items/,
     describing their properties.  In completion functions manipulating
@@ -323,7 +322,8 @@ Let's start with an umbrella customization group:
   :header-args: :noweb-ref espotify-body
   :END:
 
-  Once we now the URI we want to play (that ~uri~ entry in our [[search-and-completion][candidates]]),
+  Once we now the URI we want to play (that ~uri~ entry in our [[*Search results as
+   completion][candidates]]),
   sending it to a local player via DBUS is fairly easy.
   Let's define a couple of customizable variables pointing to the
   service name and bus:
