@@ -803,7 +803,7 @@ Let's start with an umbrella customization group:
       ;;; ivy-spotify.el --- Search spotify with ivy/counsel  -*- lexical-binding: t; -*-
 
       <<author-boilerplate>>
-      ;; Package-Requires: ((emacs "26.1") (spotify "0.1") (ivy "0.10"))
+      ;; Package-Requires: ((emacs "26.1") (spotify "0.1") (ivy "0.13.1"))
 
       <<license>>
 
