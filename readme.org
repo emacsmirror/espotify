@@ -771,6 +771,8 @@ Let's start with an umbrella customization group:
 
       ;;; Code:
 
+      (require 'dbus)
+
       <<espotify-customization>>
 
       <<espotify-body>>
