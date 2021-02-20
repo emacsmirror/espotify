@@ -40,6 +40,8 @@
 
 ;;; Code:
 
+(require 'dbus)
+
 (defgroup espotify nil
   "Access to Spotify API and clients"
   :group 'multimedia)
@@ -73,24 +75,27 @@ alternative clients such as mopidy or spotifyd."
   "End-point to access Spotify's authentication tokens.")
 
 (defun espotify--basic-auth-credentials ()
+  "Get credentials."
   (let ((credential (concat espotify-client-id ":" espotify-client-secret)))
     (concat "Basic " (base64-encode-string credential t))))
 
 (defvar url-http-end-of-headers)
 
 (defun espotify--with-auth-token (callback)
+  "Use CALLBACK with a token."
   (let ((url-request-method "POST")
         (url-request-data "&grant_type=client_credentials")
         (url-request-extra-headers
          `(("Content-Type" . "application/x-www-form-urlencoded")
            ("Authorization" . ,(espotify--basic-auth-credentials)))))
-     (url-retrieve espotify-spotify-api-authentication-url
-                   (lambda (_status)
-                     (goto-char url-http-end-of-headers)
-                     (funcall callback
-                              (alist-get 'access_token (json-read)))))))
+    (url-retrieve espotify-spotify-api-authentication-url
+                  (lambda (_status)
+                    (goto-char url-http-end-of-headers)
+                    (funcall callback
+                             (alist-get 'access_token (json-read)))))))
 
 (defun espotify--make-search-url (term types &optional filter)
+  "Use TERM, TYPES and FILTER to create a URL."
   (when (null types)
     (error "Must supply a non-empty list of types to search for"))
   (let ((term (url-encode-url term)))
@@ -100,6 +105,7 @@ alternative clients such as mopidy or spotifyd."
             (mapconcat #'symbol-name types ","))))
 
 (defun espotify--with-query-results (token url callback)
+  "Call CALLBACK with the results of browsing URL with TOKEN."
   (let ((url-request-extra-headers
          `(("Authorization" . ,(concat "Bearer " token)))))
     (url-retrieve url
@@ -126,10 +132,12 @@ query FILTER."
   (espotify-get callback (espotify--make-search-url term types filter)))
 
 (defun espotify--type-items (res type)
+  "Auxiliary function for RES and TYPE."
   (alist-get 'items (alist-get (intern (format "%ss" type)) res)))
 
 (defun espotify-search* (callback term types &optional filter)
-  "Like `espotify-search', but CALLBACK receives lists of items types."
+  "Like `espotify-search', but CALLBACK receives lists of items types.
+   TERM FILTER TYPES for checkdoc compliance."
   (let* ((types (if (listp types) types (list types)))
          (cb (lambda (res)
                (let ((its (mapcar (lambda (tp)
@@ -139,7 +147,8 @@ query FILTER."
     (espotify-search cb term types filter)))
 
 (defun espotify-search-all (callback term &optional types filter)
-  "Like `espotify-search', but CALLBACK receives a single list of results."
+  "Like `espotify-search', but CALLBACK receives a single list of results.
+   TERM, FILTER to make checkdoc happy."
   (let ((types (or types '(album track artist playlist))))
     (espotify-search* (lambda (&rest items)
                         (funcall callback (apply 'append items)))
@@ -169,7 +178,7 @@ The metadata will be accessible via `espotify-candidate-metadata'."
 
 ;;;###autoload
 (defun espotify-candidate-metadata (cand)
-  "Extract from CANDIDATE (as returned by `espotify-format-item') its metadata."
+  "Extract from CAND (as returned by `espotify-format-item') its metadata."
   (get-text-property 0 'espotify-item cand))
 
 (defvar espotify-search-suffix "="
@@ -256,7 +265,7 @@ The metadata will be accessible via `espotify-candidate-metadata'."
 
 ;;;###autoload
 (defun espotify-yank-candidate-url (candidate)
-  "Add to kill ring the Spotify URL of this CANDIDATE"
+  "Add to kill ring the Spotify URL of this CANDIDATE."
   (when-let (item (espotify-candidate-metadata candidate))
     (if-let (url (alist-get 'spotify (alist-get 'external_urls item)))
         (kill-new url)

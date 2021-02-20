@@ -49,6 +49,7 @@
 (defvar consult-spotify-history nil)
 
 (defun consult-spotify-by (type &optional filter)
+  "Consult spotify by TYPE with FILTER."
   (consult--read (consult-spotify--search-generator type filter)
                  :prompt (format "Search %ss: " type)
                  :lookup 'consult-spotify--consult-lookup
@@ -59,6 +60,7 @@
 
 
 (defun consult-spotify--search-generator (type filter)
+  "Generate an async search closure for TYPE and FILTER."
   (thread-first (consult--async-sink)
     (consult--async-refresh-immediate)
     (consult--async-map #'espotify-format-item)
@@ -67,6 +69,7 @@
     (consult--async-split)))
 
 (defun consult-spotify--async-search (next type filter)
+  "Async search with NEXT, TYPE and FILTER."
   (let ((current ""))
     (lambda (action)
       (pcase action
@@ -83,6 +86,7 @@
         (_ (funcall next action))))))
 
 (defun consult-spotify--consult-lookup (_input cands cand)
+  "Find CAND in CANDS."
   (seq-find (lambda (x) (string= cand x)) cands))
 
 ;;;###autoload

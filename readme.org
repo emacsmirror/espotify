@@ -65,6 +65,7 @@ Let's start with an umbrella customization group:
 
     #+begin_src emacs-lisp
       (defun espotify--basic-auth-credentials ()
+        "Get credentials."
         (let ((credential (concat espotify-client-id ":" espotify-client-secret)))
           (concat "Basic " (base64-encode-string credential t))))
 
@@ -80,16 +81,17 @@ Let's start with an umbrella customization group:
       (defvar url-http-end-of-headers)
 
       (defun espotify--with-auth-token (callback)
+        "Use CALLBACK with a token."
         (let ((url-request-method "POST")
               (url-request-data "&grant_type=client_credentials")
               (url-request-extra-headers
                `(("Content-Type" . "application/x-www-form-urlencoded")
                  ("Authorization" . ,(espotify--basic-auth-credentials)))))
-           (url-retrieve espotify-spotify-api-authentication-url
-                         (lambda (_status)
-                           (goto-char url-http-end-of-headers)
-                           (funcall callback
-                                    (alist-get 'access_token (json-read)))))))
+          (url-retrieve espotify-spotify-api-authentication-url
+                        (lambda (_status)
+                          (goto-char url-http-end-of-headers)
+                          (funcall callback
+                                   (alist-get 'access_token (json-read)))))))
 
     #+end_src
 
@@ -113,6 +115,7 @@ Let's start with an umbrella customization group:
 
     #+begin_src emacs-lisp
       (defun espotify--make-search-url (term types &optional filter)
+        "Use TERM, TYPES and FILTER to create a URL."
         (when (null types)
           (error "Must supply a non-empty list of types to search for"))
         (let ((term (url-encode-url term)))
@@ -138,6 +141,7 @@ Let's start with an umbrella customization group:
 
     #+begin_src emacs-lisp
       (defun espotify--with-query-results (token url callback)
+        "Call CALLBACK with the results of browsing URL with TOKEN."
         (let ((url-request-extra-headers
                `(("Authorization" . ,(concat "Bearer " token)))))
           (url-retrieve url
@@ -195,10 +199,12 @@ Let's start with an umbrella customization group:
 
     #+begin_src emacs-lisp
       (defun espotify--type-items (res type)
+        "Auxiliary function for RES and TYPE."
         (alist-get 'items (alist-get (intern (format "%ss" type)) res)))
 
       (defun espotify-search* (callback term types &optional filter)
-        "Like `espotify-search', but CALLBACK receives lists of items types."
+        "Like `espotify-search', but CALLBACK receives lists of items types.
+         TERM FILTER TYPES for checkdoc compliance."
         (let* ((types (if (listp types) types (list types)))
                (cb (lambda (res)
                      (let ((its (mapcar (lambda (tp)
@@ -233,7 +239,8 @@ Let's start with an umbrella customization group:
 
     #+begin_src emacs-lisp
       (defun espotify-search-all (callback term &optional types filter)
-        "Like `espotify-search', but CALLBACK receives a single list of results."
+        "Like `espotify-search', but CALLBACK receives a single list of results.
+         TERM, FILTER to make checkdoc happy."
         (let ((types (or types '(album track artist playlist))))
           (espotify-search* (lambda (&rest items)
                               (funcall callback (apply 'append items)))
@@ -281,7 +288,7 @@ Let's start with an umbrella customization group:
 
       ;;;###autoload
       (defun espotify-candidate-metadata (cand)
-        "Extract from CANDIDATE (as returned by `espotify-format-item') its metadata."
+        "Extract from CAND (as returned by `espotify-format-item') its metadata."
         (get-text-property 0 'espotify-item cand))
 
     #+end_src
@@ -437,7 +444,7 @@ Let's start with an umbrella customization group:
 
     ;;;###autoload
     (defun espotify-yank-candidate-url (candidate)
-      "Add to kill ring the Spotify URL of this CANDIDATE"
+      "Add to kill ring the Spotify URL of this CANDIDATE."
       (when-let (item (espotify-candidate-metadata candidate))
         (if-let (url (alist-get 'spotify (alist-get 'external_urls item)))
             (kill-new url)
@@ -476,6 +483,7 @@ Let's start with an umbrella customization group:
       (defvar consult-spotify-history nil)
 
       (defun consult-spotify-by (type &optional filter)
+        "Consult spotify by TYPE with FILTER."
         (consult--read (consult-spotify--search-generator type filter)
                        :prompt (format "Search %ss: " type)
                        :lookup 'consult-spotify--consult-lookup
@@ -493,6 +501,7 @@ Let's start with an umbrella customization group:
     #+begin_src emacs-lisp
 
       (defun consult-spotify--search-generator (type filter)
+        "Generate an async search closure for TYPE and FILTER."
         (thread-first (consult--async-sink)
           (consult--async-refresh-immediate)
           (consult--async-map #'espotify-format-item)
@@ -558,6 +567,7 @@ Let's start with an umbrella customization group:
 
     #+begin_src emacs-lisp
       (defun consult-spotify--async-search (next type filter)
+        "Async search with NEXT, TYPE and FILTER."
         (let ((current ""))
           (lambda (action)
             (pcase action
@@ -584,6 +594,7 @@ Let's start with an umbrella customization group:
 
      #+begin_src emacs-lisp
        (defun consult-spotify--consult-lookup (_input cands cand)
+         "Find CAND in CANDS."
          (seq-find (lambda (x) (string= cand x)) cands))
 
      #+end_src
