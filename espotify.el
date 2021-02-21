@@ -151,7 +151,7 @@ query FILTER."
    TERM, FILTER to make checkdoc happy."
   (let ((types (or types '(album track artist playlist))))
     (espotify-search* (lambda (&rest items)
-                        (funcall callback (apply 'append items)))
+                        (funcall callback (apply #'append items)))
                       term
                       types
                       filter)))
@@ -200,6 +200,7 @@ The metadata will be accessible via `espotify-candidate-metadata'."
            (substring new 0 (- (length new)
                                (length espotify-search-suffix))))
           ((>= (espotify--distance prev new) espotify-search-threshold) new))))
+
 (defun espotify--dbus-call (method &rest args)
   "Tell Spotify to execute METHOD with ARGS through DBUS."
   (apply #'dbus-call-method `(,(if espotify-use-system-bus-p :system :session)

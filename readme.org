@@ -243,7 +243,7 @@ Let's start with an umbrella customization group:
          TERM, FILTER to make checkdoc happy."
         (let ((types (or types '(album track artist playlist))))
           (espotify-search* (lambda (&rest items)
-                              (funcall callback (apply 'append items)))
+                              (funcall callback (apply #'append items)))
                             term
                             types
                             filter)))
@@ -352,6 +352,7 @@ Let's start with an umbrella customization group:
   breeze:
 
   #+begin_src emacs-lisp
+
     (defun espotify--dbus-call (method &rest args)
       "Tell Spotify to execute METHOD with ARGS through DBUS."
       (apply #'dbus-call-method `(,(if espotify-use-system-bus-p :system :session)
