@@ -158,12 +158,13 @@ query FILTER."
 
 (defun espotify--additional-item-info (item)
   "Helper creating a string description of ITEM's metadata."
-  (mapconcat 'identity
-             (seq-filter 'identity
-                         `(,(alist-get 'name (alist-get 'album item))
-                           ,(alist-get 'name (car (alist-get 'artists item)))
-                           ,(alist-get 'display_name (alist-get 'owner item))))
-             ", "))
+  (let ((names (mapcar (lambda (a) (alist-get 'name a))
+                       (cons (alist-get 'album item)
+                             (alist-get 'artists item))))
+        (dname (alist-get 'display_name (alist-get 'owner item))))
+    (mapconcat 'identity
+               (seq-filter #'identity (append names (list dname)))
+               ", ")))
 
 ;;;###autoload
 (defun espotify-format-item (item)
