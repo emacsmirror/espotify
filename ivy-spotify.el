@@ -74,21 +74,25 @@
 
 ;;;###autoload
 (defun ivy-spotify-album ()
+  "Query spotify for an album using ivy."
   (interactive)
   (ivy-spotify-search-by 'album))
 
 ;;;###autoload
 (defun ivy-spotify-artist ()
+  "Query spotify for an artist using ivy."
   (interactive)
   (ivy-spotify-search-by 'artist))
 
 ;;;###autoload
 (defun ivy-spotify-track ()
+  "Query spotify for a track using ivy."
   (interactive)
   (ivy-spotify-search-by 'track))
 
 ;;;###autoload
 (defun ivy-spotify-playlist ()
+  "Query spotify for a playlist using ivy."
   (interactive)
   (ivy-spotify-search-by 'playlist))
 
