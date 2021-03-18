@@ -757,7 +757,7 @@ Let's start with an umbrella customization group:
   offers out of the box, though, is much more difficult to get.
 
 * Packages
-*** espotify.el (generic utilities)
+*** espotify.el
     #+begin_src emacs-lisp :tangle espotify.el
       ;;; espotify.el --- Spotify access library  -*- lexical-binding: t; -*-
 
