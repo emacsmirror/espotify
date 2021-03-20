@@ -1,4 +1,4 @@
-;;; ivy-spotify.el --- Search spotify with ivy/counsel  -*- lexical-binding: t; -*-
+;;; ivy-spotify.el --- Search spotify with ivy  -*- lexical-binding: t; -*-
 
 ;; Author: Jose A Ortega Ruiz <jao@gnu.org>
 ;; Maintainer: Jose A Ortega Ruiz
