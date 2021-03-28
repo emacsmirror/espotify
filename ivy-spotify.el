@@ -80,7 +80,7 @@
                        item
                      (alist-get 'album item)))
         (espotify-play-uri (alist-get 'uri album))
-      (error "No album for %s" (alist-get 'name item)))))
+      (message "No album found for '%s'" (alist-get 'name item)))))
 
 (defvar ivy-spotify-search-history nil
   "History for spotify searches.")
