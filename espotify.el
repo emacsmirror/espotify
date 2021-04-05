@@ -76,6 +76,10 @@ alternative clients such as mopidy or spotifyd."
 
 (defun espotify--basic-auth-credentials ()
   "Get credentials."
+  (unless (and (> (length espotify-client-id) 0)
+               (> (length espotify-client-secret) 0))
+    (user-error "Invalid Spotify credentials: please set `%s' and `%s'"
+                "espotify-client-id" "espotify-client-secret"))
   (let ((credential (concat espotify-client-id ":" espotify-client-secret)))
     (concat "Basic " (base64-encode-string credential t))))
 

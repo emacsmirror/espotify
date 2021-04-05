@@ -60,12 +60,16 @@ Let's start with an umbrella customization group:
     #+end_src
 
     To get valid values for them, one just needs to [[https://developer.spotify.com/my-applications][register a Spotify
-    application]].  From them we can derive a base64-encoded credentials
-    value:
+    application]].  From those two variables we can derive a
+    base64-encoded credentials value:
 
     #+begin_src emacs-lisp
       (defun espotify--basic-auth-credentials ()
         "Get credentials."
+        (unless (and (> (length espotify-client-id) 0)
+                     (> (length espotify-client-secret) 0))
+          (user-error "Invalid Spotify credentials: please set `%s' and `%s'"
+                      "espotify-client-id" "espotify-client-secret"))
         (let ((credential (concat espotify-client-id ":" espotify-client-secret)))
           (concat "Basic " (base64-encode-string credential t))))
 
@@ -834,6 +838,7 @@ Let's start with an umbrella customization group:
       ;;; Code:
 
       (require 'seq)
+      (require 'subr-x)
       (require 'espotify)
       (require 'consult)
       (require 'marginalia)
