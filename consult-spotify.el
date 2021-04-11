@@ -53,7 +53,7 @@
   "Consult spotify by TYPE with FILTER."
   (consult--read (consult-spotify--search-generator type filter)
                  :prompt (format "Search %ss: " type)
-                 :lookup 'consult-spotify--consult-lookup
+                 :lookup #'consult--lookup-member
                  :category 'spotify-search-item
                  :history 'consult-spotify-history
                  :initial consult-async-default-split
@@ -85,10 +85,6 @@
             type
             filter)))
         (_ (funcall next action))))))
-
-(defun consult-spotify--consult-lookup (_input cands cand)
-  "Find CAND in CANDS."
-  (seq-find (lambda (x) (string= cand x)) cands))
 
 ;;;###autoload
 (defun consult-spotify-album ()

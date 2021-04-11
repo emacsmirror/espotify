@@ -492,7 +492,7 @@ Let's start with an umbrella customization group:
         "Consult spotify by TYPE with FILTER."
         (consult--read (consult-spotify--search-generator type filter)
                        :prompt (format "Search %ss: " type)
-                       :lookup 'consult-spotify--consult-lookup
+                       :lookup #'consult--lookup-member
                        :category 'spotify-search-item
                        :history 'consult-spotify-history
                        :initial consult-async-default-split
@@ -594,16 +594,9 @@ Let's start with an umbrella customization group:
     We're using ~espotify-check-term~ to decide when the new term to
     search is going to trigger a new search, ignoring it otherwise.
 
-    Finally, we make sure that we access our formatted candidate
-    string when consult looks up for it using the ~:lookup~ function,
-    which we can simply define as:
-
-     #+begin_src emacs-lisp
-       (defun consult-spotify--consult-lookup (_input cands cand)
-         "Find CAND in CANDS."
-         (seq-find (lambda (x) (string= cand x)) cands))
-
-     #+end_src
+    Note that we made sure that we access our formatted candidate
+    string when consult looks up for it using the stock ~:lookup~
+    function ~consult--lookup-member~.
 
 *** User level commands
 
