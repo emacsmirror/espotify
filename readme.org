@@ -661,8 +661,8 @@ Let's start with an umbrella customization group:
               "")
             :face 'marginalia-date :width 10))))
 
-      (add-to-list 'marginalia-annotators-heavy
-                   '(spotify-search-item . consult-spotify--annotate))
+      (add-to-list 'marginalia-annotator-registry
+                   '(spotify-search-item consult-spotify--annotate))
 
     #+end_src
 
@@ -814,7 +814,7 @@ Let's start with an umbrella customization group:
       ;;; consult-spotify.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
 
       <<author-boilerplate>>
-      ;; Package-Requires: ((emacs "26.1") (consult "0.5") (marginalia "0.3") (espotify "0.1"))
+      ;; Package-Requires: ((emacs "26.1") (consult "0.5") (marginalia "0.5") (espotify "0.1"))
 
       <<license>>
 

@@ -6,7 +6,7 @@
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
 ;; Homepage: https://codeberg.org/jao/espotify
-;; Package-Requires: ((emacs "26.1") (consult "0.5") (marginalia "0.3") (espotify "0.1"))
+;; Package-Requires: ((emacs "26.1") (consult "0.5") (marginalia "0.5") (espotify "0.1"))
 
 ;; Copyright (C) 2021  Jose A Ortega Ruiz
 
@@ -127,8 +127,8 @@
         "")
       :face 'marginalia-date :width 10))))
 
-(add-to-list 'marginalia-annotators-heavy
-             '(spotify-search-item . consult-spotify--annotate))
+(add-to-list 'marginalia-annotator-registry
+             '(spotify-search-item consult-spotify--annotate))
 
 
 (provide 'consult-spotify)
