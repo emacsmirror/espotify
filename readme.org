@@ -835,7 +835,6 @@ Let's start with an umbrella customization group:
       (require 'subr-x)
       (require 'espotify)
       (require 'consult)
-      (require 'marginalia)
 
       <<consult-body>>
 

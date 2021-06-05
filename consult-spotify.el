@@ -45,7 +45,6 @@
 (require 'subr-x)
 (require 'espotify)
 (require 'consult)
-(require 'marginalia)
 
 (defvar consult-spotify-history nil)
 
