@@ -495,7 +495,7 @@ Let's start with an umbrella customization group:
                        :lookup #'consult--lookup-member
                        :category 'spotify-search-item
                        :history 'consult-spotify-history
-                       :initial consult-async-default-split
+                       :initial (consult--async-split-initial "")
                        :require-match t))
 
     #+end_src
@@ -815,7 +815,7 @@ Let's start with an umbrella customization group:
       ;;; consult-spotify.el --- Spotify queries using consult  -*- lexical-binding: t; -*-
 
       <<author-boilerplate>>
-      ;; Package-Requires: ((emacs "26.1") (consult "0.5") (espotify "0.1"))
+      ;; Package-Requires: ((emacs "26.1") (consult "0.8") (espotify "0.1"))
 
       <<license>>
 

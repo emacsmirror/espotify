@@ -6,7 +6,7 @@
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
 ;; Homepage: https://codeberg.org/jao/espotify
-;; Package-Requires: ((emacs "26.1") (consult "0.5") (espotify "0.1"))
+;; Package-Requires: ((emacs "26.1") (consult "0.8") (espotify "0.1"))
 
 ;; Copyright (C) 2021  Jose A Ortega Ruiz
 
@@ -55,7 +55,7 @@
                  :lookup #'consult--lookup-member
                  :category 'spotify-search-item
                  :history 'consult-spotify-history
-                 :initial consult-async-default-split
+                 :initial (consult--async-split-initial "")
                  :require-match t))
 
 
