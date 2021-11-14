@@ -54,7 +54,7 @@
                  :prompt (format "Search %ss: " type)
                  :lookup #'consult--lookup-member
                  :category 'spotify-search-item
-                 :history 'consult-spotify-history
+                 :history '(:input consult-spotify-history)
                  :initial (consult--async-split-initial "")
                  :require-match t))
 
