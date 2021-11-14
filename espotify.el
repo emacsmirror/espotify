@@ -216,10 +216,16 @@ The metadata will be accessible via `espotify-candidate-metadata'."
                               ,method
                               ,@args)))
 
+(defun espotify-play-uri-with-dbus (uri)
+  "Play the given URI using a DBUS connection."
+  (espotify--dbus-call "OpenUri" uri))
+
+(defvar espotify-play-uri-function #'espotify-play-uri-with-dbus)
+
 ;;;###autoload
 (defun espotify-play-uri (uri)
   "Use a DBUS call to play a URI denoting a resource."
-  (espotify--dbus-call "OpenUri" uri))
+  (funcall espotify-play-uri-function uri))
 
 ;;;###autoload
 (defun espotify-play-candidate (cand)
