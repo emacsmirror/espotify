@@ -459,12 +459,16 @@ Let's start with an umbrella customization group:
           (error "No album for %s" (alist-get 'name item)))))
 
     ;;;###autoload
+    (defun espotify-candidate-url (candidate)
+      "Retrieve the spotify URL for the given CANDIDATE."
+      (when-let (item (espotify-candidate-metadata candidate))
+        (alist-get 'spotify (alist-get 'external_urls item))))
+
     (defun espotify-yank-candidate-url (candidate)
       "Add to kill ring the Spotify URL of this CANDIDATE."
-      (when-let (item (espotify-candidate-metadata candidate))
-        (if-let (url (alist-get 'spotify (alist-get 'external_urls item)))
-            (kill-new url)
-          (message "No spotify URL for this candidate"))))
+      (if-let (url (espotify-candidate-url candidate))
+          (kill-new url)
+        (message "No spotify URL for this candidate")))
 
   #+end_src
 
